@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
@@ -28,6 +29,8 @@ const (
 	queryTypeAdHoc       = "query"
 
 	dateFormat = "2006-01-02"
+
+	reportQueryTimeout = 5 * time.Minute
 )
 
 func NewDatasource(ctx context.Context, settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
@@ -39,6 +42,16 @@ func NewDatasource(ctx context.Context, settings backend.DataSourceInstanceSetti
 	httpOptions, err := settings.HTTPClientOptions(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	// Cold BigQuery report runs can far exceed the SDK's default 30s HTTP timeout.
+	if httpOptions.Timeouts == nil {
+		defaults := httpclient.DefaultTimeoutOptions
+		httpOptions.Timeouts = &defaults
+	}
+
+	if httpOptions.Timeouts.Timeout < reportQueryTimeout {
+		httpOptions.Timeouts.Timeout = reportQueryTimeout
 	}
 
 	httpClient, err := httpclient.New(httpOptions)

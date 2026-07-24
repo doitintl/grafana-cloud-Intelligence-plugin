@@ -1,136 +1,81 @@
-# Grafana data source plugin template
+# DoiT Cloud Intelligence data source for Grafana
 
-This template is a starting point for building a Data Source Plugin for Grafana.
+Visualize your multicloud cost analytics from [DoiT Cloud Intelligence](https://www.doit.com/platform/) directly in Grafana. The plugin queries the [DoiT API](https://developer.doit.com/) live — no data export or sync required — so your dashboards always reflect the latest Cloud Analytics data across AWS, Google Cloud, and Azure.
 
-## What are Grafana data source plugins?
+![Cloud cost dashboard powered by DoiT reports](https://raw.githubusercontent.com/doitintl/grafana-cloud-intelligence-plugin/main/src/img/screenshot-dashboard.png)
 
-Grafana supports a wide range of data sources, including Prometheus, MySQL, and even Datadog. There’s a good chance you can already visualize metrics from the systems you have set up. In some cases, though, you already have an in-house metrics solution that you’d like to add to your Grafana dashboards. Grafana Data Source Plugins enables integrating such solutions with Grafana.
+## Features
 
-## Getting started
+- **Saved reports**: Run any Cloud Analytics report from your DoiT Console and render its results as Grafana time series or tables.
+- **Ad-hoc queries**: Build cost queries in Grafana — pick a metric (cost, usage, savings), group by dimensions (service, project, SKU, labels, …), and apply filters, without creating a report in the DoiT Console first.
+- **Grafana time range**: Report queries can follow the dashboard time picker instead of the report's own time settings.
+- **Alerting**: The data source supports Grafana Alerting; build alert rules on top of any report or ad-hoc query.
+- **Dashboard export from DoiT Console**: The DoiT Console can generate ready-made Grafana dashboard JSON from any Cloud Analytics dashboard or report for use with this data source.
 
-### Backend
+## Requirements
 
-1. Update [Grafana plugin SDK for Go](https://grafana.com/developers/plugin-tools/key-concepts/backend-plugins/grafana-plugin-sdk-for-go) dependency to the latest minor version:
+- Grafana 12.3.0 or later.
+- A DoiT Cloud Intelligence account and a [DoiT API key](https://developer.doit.com/docs/start) with Cloud Analytics access.
 
-   ```bash
-   go get -u github.com/grafana/grafana-plugin-sdk-go
-   go mod tidy
-   ```
+## Configuration
 
-2. Build plugin backend binaries for Linux, Windows and Darwin:
+1. In Grafana, go to **Connections → Data sources → Add new data source** and select **DoiT Cloud Intelligence**.
+2. Set the following options:
 
-   ```bash
-   mage -v
-   ```
+   | Option  | Description                                                            |
+   | ------- | ---------------------------------------------------------------------- |
+   | API URL | DoiT API base URL. Defaults to `https://api.doit.com`.                 |
+   | API Key | Your DoiT API key (stored encrypted via Grafana secure JSON data).     |
 
-3. List all available Mage targets for additional commands:
+3. Click **Save & test**. The health check verifies connectivity and the API key.
 
-   ```bash
-   mage -l
-   ```
+To generate an API key, see the [DoiT API documentation](https://developer.doit.com/docs/start).
 
-### Frontend
+### Provisioning example
 
-1. Install dependencies
+```yaml
+apiVersion: 1
 
-   ```bash
-   npm install
-   ```
+datasources:
+  - name: DoiT Cloud Intelligence
+    type: doitintl-doitcloudintelligence-datasource
+    access: proxy
+    jsonData:
+      apiUrl: https://api.doit.com
+    secureJsonData:
+      apiKey: $DOIT_API_KEY
+```
 
-2. Build plugin in development mode and run in watch mode
+## Usage
 
-   ```bash
-   npm run dev
-   ```
+### Query a saved report
 
-3. Build plugin in production mode
+1. Add a panel and choose the **DoiT Cloud Intelligence** data source.
+2. Set **Query type** to **Report**.
+3. Select a report from the drop-down (populated from your DoiT account).
+4. Optionally enable **Use Grafana time range** to override the report's time settings with the dashboard time picker.
 
-   ```bash
-   npm run build
-   ```
+### Ad-hoc query
 
-4. Run the tests (using Jest)
+1. Set **Query type** to **Query**.
+2. Choose a metric, time interval, and aggregation.
+3. Add group-by dimensions and filters as needed.
 
-   ```bash
-   # Runs the tests and watches for changes, requires git init first
-   npm run test
+Results are returned as time series frames (one series per group) suitable for time series, bar chart, and stat panels, or as a table for tabular reports.
 
-   # Exits after running all the tests
-   npm run test:ci
-   ```
+### Alerting
 
-5. Spin up a Grafana instance and run the plugin inside it (using Docker)
+The data source supports Grafana Alerting. Create an alert rule, choose this data source in the query, and add expressions (reduce, threshold) as usual.
 
-   ```bash
-   npm run server
-   ```
+## Getting help
 
-6. Run the E2E tests (using Playwright)
+- [Open an issue](https://github.com/doitintl/grafana-cloud-intelligence-plugin/issues) for bugs or feature requests.
+- [DoiT API reference](https://developer.doit.com/reference) for the underlying Cloud Analytics API.
 
-   ```bash
-   # Spins up a Grafana instance first that we tests against
-   npm run server
+## Development
 
-   # If you wish to start a certain Grafana version. If not specified will use latest by default
-   GRAFANA_VERSION=11.3.0 npm run server
+See [CONTRIBUTING.md](https://github.com/doitintl/grafana-cloud-intelligence-plugin/blob/main/CONTRIBUTING.md) for local development, build, and test instructions.
 
-   # Starts the tests
-   npm run e2e
-   ```
+## License
 
-7. Run the linter
-
-   ```bash
-   npm run lint
-
-   # or
-
-   npm run lint:fix
-   ```
-
-# Distributing your plugin
-
-When distributing a Grafana plugin either within the community or privately the plugin must be signed so the Grafana application can verify its authenticity. This can be done with the `@grafana/sign-plugin` package.
-
-_Note: It's not necessary to sign a plugin during development. The docker development environment that is scaffolded with `@grafana/create-plugin` caters for running the plugin without a signature._
-
-## Initial steps
-
-Before signing a plugin please read the Grafana [plugin publishing and signing criteria](https://grafana.com/legal/plugins/#plugin-publishing-and-signing-criteria) documentation carefully.
-
-`@grafana/create-plugin` has added the necessary commands and workflows to make signing and distributing a plugin via the grafana plugins catalog as straightforward as possible.
-
-Before signing a plugin for the first time please consult the Grafana [plugin signature levels](https://grafana.com/legal/plugins/#what-are-the-different-classifications-of-plugins) documentation to understand the differences between the types of signature level.
-
-1. Create a [Grafana Cloud account](https://grafana.com/signup).
-2. Make sure that the first part of the plugin ID matches the slug of your Grafana Cloud account.
-   - _You can find the plugin ID in the `plugin.json` file inside your plugin directory. For example, if your account slug is `acmecorp`, you need to prefix the plugin ID with `acmecorp-`._
-3. Create a Grafana Cloud API key with the `PluginPublisher` role.
-4. Keep a record of this API key as it will be required for signing a plugin
-
-## Signing a plugin
-
-### Using Github actions release workflow
-
-If the plugin is using the github actions supplied with `@grafana/create-plugin` signing a plugin is included out of the box. The [release workflow](./.github/workflows/release.yml) can prepare everything to make submitting your plugin to Grafana as easy as possible. Before being able to sign the plugin however a secret needs adding to the Github repository.
-
-1. Please navigate to "settings > secrets > actions" within your repo to create secrets.
-2. Click "New repository secret"
-3. Name the secret "GRAFANA_API_KEY"
-4. Paste your Grafana Cloud API key in the Secret field
-5. Click "Add secret"
-
-#### Push a version tag
-
-To trigger the workflow we need to push a version tag to github. This can be achieved with the following steps:
-
-1. Run `npm version <major|minor|patch>`
-2. Run `git push origin main --follow-tags`
-
-## Learn more
-
-Below you can find source code for existing app plugins and other related documentation.
-
-- [Basic data source plugin example](https://github.com/grafana/grafana-plugin-examples/tree/master/examples/datasource-basic#readme)
-- [`plugin.json` documentation](https://grafana.com/developers/plugin-tools/reference/plugin-json)
-- [How to sign a plugin?](https://grafana.com/developers/plugin-tools/publish-a-plugin/sign-a-plugin)
+[Apache-2.0](https://github.com/doitintl/grafana-cloud-intelligence-plugin/blob/main/LICENSE)

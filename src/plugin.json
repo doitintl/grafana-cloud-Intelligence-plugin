@@ -5,19 +5,43 @@
   "id": "doitintl-doitcloudintelligence-datasource",
   "metrics": true,
   "backend": true,
+  "alerting": true,
   "executable": "gpx_doit_cloud_intelligence",
   "info": {
-    "description": "Query DoiT Cloud Intelligence report data (Cloud Analytics) directly from Grafana",
+    "description": "Visualize DoiT Cloud Intelligence cost analytics in Grafana. Run saved Cloud Analytics reports or ad-hoc cost queries against the DoiT API.",
     "author": {
-      "name": "DoiT International"
+      "name": "DoiT International",
+      "url": "https://www.doit.com"
     },
-    "keywords": ["datasource", "doit", "cloud cost", "finops", "cloud analytics"],
+    "keywords": ["doit", "finops", "cloud cost", "cloud analytics", "billing", "aws", "gcp", "azure"],
     "logos": {
       "small": "img/logo.svg",
       "large": "img/logo.svg"
     },
-    "links": [],
-    "screenshots": [],
+    "links": [
+      {
+        "name": "Website",
+        "url": "https://www.doit.com/platform/"
+      },
+      {
+        "name": "Repository",
+        "url": "https://github.com/doitintl/grafana-cloud-intelligence-plugin"
+      },
+      {
+        "name": "License",
+        "url": "https://github.com/doitintl/grafana-cloud-intelligence-plugin/blob/main/LICENSE"
+      },
+      {
+        "name": "API Documentation",
+        "url": "https://developer.doit.com/reference"
+      }
+    ],
+    "screenshots": [
+      {
+        "name": "Cloud cost dashboard powered by DoiT reports",
+        "path": "img/screenshot-dashboard.png"
+      }
+    ],
     "version": "%VERSION%",
     "updated": "%TODAY%"
   },

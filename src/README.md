@@ -1,50 +1,81 @@
-<!-- This README file is going to be the one displayed on the Grafana.com website for your plugin. Uncomment and replace the content here before publishing.
+# DoiT Cloud Intelligence data source for Grafana
 
-Remove any remaining comments before publishing as these may be displayed on Grafana.com -->
+Visualize your multicloud cost analytics from [DoiT Cloud Intelligence](https://www.doit.com/platform/) directly in Grafana. The plugin queries the [DoiT API](https://developer.doit.com/) live — no data export or sync required — so your dashboards always reflect the latest Cloud Analytics data across AWS, Google Cloud, and Azure.
 
-# DoiT Cloud Intelligence
+![Cloud cost dashboard powered by DoiT reports](https://raw.githubusercontent.com/doitintl/grafana-cloud-intelligence-plugin/main/src/img/screenshot-dashboard.png)
 
-<!-- To help maximize the impact of your README and improve usability for users, we propose the following loose structure:
+## Features
 
-**BEFORE YOU BEGIN**
-- Ensure all links are absolute URLs so that they will work when the README is displayed within Grafana and Grafana.com
-- Be inspired ✨
-  - [grafana-polystat-panel](https://github.com/grafana/grafana-polystat-panel)
-  - [volkovlabs-variable-panel](https://github.com/volkovlabs/volkovlabs-variable-panel)
-
-**ADD SOME BADGES**
-
-Badges convey useful information at a glance for users whether in the Catalog or viewing the source code. You can use the generator on [Shields.io](https://shields.io/badges/dynamic-json-badge) together with the Grafana.com API
-to create dynamic badges that update automatically when you publish a new version to the marketplace.
-
-- For the URL parameter use `https://grafana.com/api/plugins/your-plugin-id`.
-- Example queries:
-  - Downloads: `$.downloads`
-  - Catalog Version: `$.version`
-  - Grafana Dependency: `$.grafanaDependency`
-  - Signature Type: `$.versionSignatureType`
-- Optionally, for the logo parameter use `grafana`.
-
-Full example: ![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?logo=grafana&query=$.version&url=https://grafana.com/api/plugins/grafana-polystat-panel&label=Marketplace&prefix=v&color=F47A20)
-
-Consider other [badges](https://shields.io/badges) as you feel appropriate for your project.
-
-## Overview / Introduction
-Provide one or more paragraphs as an introduction to your plugin to help users understand why they should use it.
-
-Consider including screenshots:
-- in [plugin.json](https://grafana.com/developers/plugin-tools/reference/plugin-json#info) include them as relative links.
-- in the README ensure they are absolute URLs.
+- **Saved reports**: Run any Cloud Analytics report from your DoiT Console and render its results as Grafana time series or tables.
+- **Ad-hoc queries**: Build cost queries in Grafana — pick a metric (cost, usage, savings), group by dimensions (service, project, SKU, labels, …), and apply filters, without creating a report in the DoiT Console first.
+- **Grafana time range**: Report queries can follow the dashboard time picker instead of the report's own time settings.
+- **Alerting**: The data source supports Grafana Alerting; build alert rules on top of any report or ad-hoc query.
+- **Dashboard export from DoiT Console**: The DoiT Console can generate ready-made Grafana dashboard JSON from any Cloud Analytics dashboard or report for use with this data source.
 
 ## Requirements
-List any requirements or dependencies they may need to run the plugin.
 
-## Getting Started
-Provide a quick start on how to configure and use the plugin.
+- Grafana 12.3.0 or later.
+- A DoiT Cloud Intelligence account and a [DoiT API key](https://developer.doit.com/docs/start) with Cloud Analytics access.
 
-## Documentation
-If your project has dedicated documentation available for users, provide links here. For help in following Grafana's style recommendations for technical documentation, refer to our [Writer's Toolkit](https://grafana.com/docs/writers-toolkit/).
+## Configuration
 
-## Contributing
-Do you want folks to contribute to the plugin or provide feedback through specific means? If so, tell them how!
--->
+1. In Grafana, go to **Connections → Data sources → Add new data source** and select **DoiT Cloud Intelligence**.
+2. Set the following options:
+
+   | Option  | Description                                                            |
+   | ------- | ---------------------------------------------------------------------- |
+   | API URL | DoiT API base URL. Defaults to `https://api.doit.com`.                 |
+   | API Key | Your DoiT API key (stored encrypted via Grafana secure JSON data).     |
+
+3. Click **Save & test**. The health check verifies connectivity and the API key.
+
+To generate an API key, see the [DoiT API documentation](https://developer.doit.com/docs/start).
+
+### Provisioning example
+
+```yaml
+apiVersion: 1
+
+datasources:
+  - name: DoiT Cloud Intelligence
+    type: doitintl-doitcloudintelligence-datasource
+    access: proxy
+    jsonData:
+      apiUrl: https://api.doit.com
+    secureJsonData:
+      apiKey: $DOIT_API_KEY
+```
+
+## Usage
+
+### Query a saved report
+
+1. Add a panel and choose the **DoiT Cloud Intelligence** data source.
+2. Set **Query type** to **Report**.
+3. Select a report from the drop-down (populated from your DoiT account).
+4. Optionally enable **Use Grafana time range** to override the report's time settings with the dashboard time picker.
+
+### Ad-hoc query
+
+1. Set **Query type** to **Query**.
+2. Choose a metric, time interval, and aggregation.
+3. Add group-by dimensions and filters as needed.
+
+Results are returned as time series frames (one series per group) suitable for time series, bar chart, and stat panels, or as a table for tabular reports.
+
+### Alerting
+
+The data source supports Grafana Alerting. Create an alert rule, choose this data source in the query, and add expressions (reduce, threshold) as usual.
+
+## Getting help
+
+- [Open an issue](https://github.com/doitintl/grafana-cloud-intelligence-plugin/issues) for bugs or feature requests.
+- [DoiT API reference](https://developer.doit.com/reference) for the underlying Cloud Analytics API.
+
+## Development
+
+See [CONTRIBUTING.md](https://github.com/doitintl/grafana-cloud-intelligence-plugin/blob/main/CONTRIBUTING.md) for local development, build, and test instructions.
+
+## License
+
+[Apache-2.0](https://github.com/doitintl/grafana-cloud-intelligence-plugin/blob/main/LICENSE)

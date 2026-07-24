@@ -3,12 +3,14 @@ apiVersion: 1
 datasources:
   - name: 'DoiT Cloud Intelligence'
     type: 'doitintl-doitcloudintelligence-datasource'
+    uid: doit-cloud-intelligence
     access: proxy
     isDefault: false
     orgId: 1
     version: 1
     editable: true
     jsonData:
-      path: '/resources'
+      # Defaults to https://api.doit.com when empty
+      apiUrl: '${DOIT_API_URL}'
     secureJsonData:
-      apiKey: 'api-key'
+      apiKey: '${DOIT_API_KEY}'

@@ -1,0 +1,91 @@
+{
+  "title": "DoiT Cloud Intelligence — Sample",
+  "uid": "doit-ci-sample",
+  "tags": ["doit", "cloud-analytics", "sample"],
+  "timezone": "utc",
+  "editable": true,
+  "schemaVersion": 39,
+  "version": 1,
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Cloud cost by service (last 30 days)",
+      "type": "timeseries",
+      "gridPos": { "h": 10, "w": 16, "x": 0, "y": 0 },
+      "datasource": {
+        "type": "doitintl-doitcloudintelligence-datasource",
+        "uid": "doit-cloud-intelligence"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "stacking": { "mode": "normal", "group": "A" }
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "doitQueryType": "query",
+          "config": {
+            "metric": { "type": "basic", "value": "cost" },
+            "timeRange": { "mode": "last", "amount": 30, "unit": "day", "includeCurrent": true },
+            "timeInterval": "day",
+            "aggregation": "total",
+            "dimensions": [
+              { "id": "year", "type": "datetime" },
+              { "id": "month", "type": "datetime" },
+              { "id": "day", "type": "datetime" }
+            ],
+            "group": [{ "id": "service_description", "type": "fixed" }]
+          }
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Cost by cloud provider (last 30 days)",
+      "type": "piechart",
+      "gridPos": { "h": 10, "w": 8, "x": 16, "y": 0 },
+      "datasource": {
+        "type": "doitintl-doitcloudintelligence-datasource",
+        "uid": "doit-cloud-intelligence"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["sum"], "values": false }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "doitQueryType": "query",
+          "config": {
+            "metric": { "type": "basic", "value": "cost" },
+            "timeRange": { "mode": "last", "amount": 30, "unit": "day", "includeCurrent": true },
+            "timeInterval": "day",
+            "aggregation": "total",
+            "dimensions": [
+              { "id": "year", "type": "datetime" },
+              { "id": "month", "type": "datetime" },
+              { "id": "day", "type": "datetime" }
+            ],
+            "group": [{ "id": "cloud_provider", "type": "fixed" }]
+          }
+        }
+      ]
+    }
+  ]
+}
