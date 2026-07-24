@@ -107,6 +107,53 @@ func TestFramesFromResult_Table(t *testing.T) {
 	}
 }
 
+func TestFramesFromResult_TimeSeriesExcludesDatePartColumns(t *testing.T) {
+	result := &doitapi.ReportResult{
+		Schema: []doitapi.SchemaField{
+			{Name: "cloud_provider", Type: "string"},
+			{Name: "year", Type: "string"},
+			{Name: "month", Type: "string"},
+			{Name: "day", Type: "string"},
+			{Name: "cost", Type: "float"},
+			{Name: "timestamp", Type: "timestamp"},
+		},
+		Rows: [][]json.RawMessage{
+			{raw(`"google-cloud"`), raw(`"2026"`), raw(`"07"`), raw(`"18"`), raw(`10`), raw(`1743465600`)},
+			{raw(`"google-cloud"`), raw(`"2026"`), raw(`"07"`), raw(`"19"`), raw(`12`), raw(`1743552000`)},
+			{raw(`"amazon-web-services"`), raw(`"2026"`), raw(`"07"`), raw(`"18"`), raw(`5`), raw(`1743465600`)},
+		},
+	}
+
+	frames, err := FramesFromResult("test", result)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	frame := frames[0]
+
+	// time + one series per provider; date parts must not split series
+	if len(frame.Fields) != 3 {
+		t.Fatalf("expected 3 fields, got %d", len(frame.Fields))
+	}
+
+	gcp := frame.Fields[1]
+	if gcp.Labels["cloud_provider"] != "google-cloud" {
+		t.Errorf("unexpected labels: %v", gcp.Labels)
+	}
+
+	if _, ok := gcp.Labels["day"]; ok {
+		t.Errorf("date part leaked into labels: %v", gcp.Labels)
+	}
+
+	if gcp.Len() != 2 {
+		t.Fatalf("expected 2 points, got %d", gcp.Len())
+	}
+
+	if v, ok := gcp.At(1).(*float64); !ok || v == nil || *v != 12 {
+		t.Errorf("unexpected value at t1: %v", gcp.At(1))
+	}
+}
+
 func TestFramesFromResult_Empty(t *testing.T) {
 	frames, err := FramesFromResult("empty", &doitapi.ReportResult{})
 	if err != nil {

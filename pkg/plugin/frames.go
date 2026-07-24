@@ -177,6 +177,28 @@ func tableFrame(name string, result *doitapi.ReportResult) (*data.Frame, error) 
 	return frame, nil
 }
 
+// datePartColumns are string columns emitted alongside the timestamp column for
+// time-interval grouping; the timestamp already encodes them, so they must not
+// become series labels.
+var datePartColumns = map[string]bool{
+	"year":          true,
+	"quarter":       true,
+	"month":         true,
+	"week":          true,
+	"iso_week":      true,
+	"day":           true,
+	"day_of_week":   true,
+	"hour":          true,
+	"week_day":      true,
+	"year_week":     true,
+	"year_month":    true,
+	"month_day":     true,
+	"date":          true,
+	"datetime":      true,
+	"usage_date":    true,
+	"invoice_month": true,
+}
+
 func classifyColumns(schema []doitapi.SchemaField, tsIdx int) (metricIdxs, dimensionIdxs []int) {
 	for i, field := range schema {
 		if i == tsIdx {
@@ -189,6 +211,10 @@ func classifyColumns(schema []doitapi.SchemaField, tsIdx int) (metricIdxs, dimen
 		case timestampFieldType:
 			// extra timestamp columns are ignored
 		default:
+			if datePartColumns[strings.ToLower(field.Name)] {
+				continue
+			}
+
 			dimensionIdxs = append(dimensionIdxs, i)
 		}
 	}
