@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "datasource",
+  "name": "DoiT Cloud Intelligence",
+  "id": "doitintl-doitcloudintelligence-datasource",
+  "metrics": true,
+  "backend": true,
+  "executable": "gpx_doit_cloud_intelligence",
+  "info": {
+    "description": "Query DoiT Cloud Intelligence report data (Cloud Analytics) directly from Grafana",
+    "author": {
+      "name": "DoiT International"
+    },
+    "keywords": ["datasource", "doit", "cloud cost", "finops", "cloud analytics"],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [],
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "dependencies": {
+    "grafanaDependency": ">=12.3.0",
+    "plugins": []
+  }
+}
