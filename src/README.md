@@ -1,6 +1,6 @@
-# DoiT Cloud Intelligence data source for Grafana
+# Cloud Intelligence™ data source for Grafana
 
-Visualize your multicloud cost analytics from [DoiT Cloud Intelligence](https://www.doit.com/platform/) directly in Grafana. The plugin queries the [DoiT API](https://developer.doit.com/) directly, with no data export or sync required.
+Visualize your multicloud cost analytics from [Cloud Intelligence™](https://www.doit.com/platform/) directly in Grafana. The plugin queries the [DoiT API](https://developer.doit.com/) directly, with no data export or sync required, across AWS, Google Cloud, Azure, Oracle Cloud and over [40 additional integrations](https://www.doit.com/integrations).
 
 ![Cloud cost dashboard powered by DoiT reports](https://raw.githubusercontent.com/doitintl/grafana-cloud-intelligence-plugin/main/src/img/grafana-pulse-dark.png)
 
@@ -15,7 +15,7 @@ Visualize your multicloud cost analytics from [DoiT Cloud Intelligence](https://
 ## Requirements
 
 - Grafana 12.3.0 or later.
-- A DoiT Cloud Intelligence account and a [DoiT API key](https://developer.doit.com/docs/start) with Cloud Analytics access.
+- A Cloud Intelligence™ account and a [DoiT API key](https://developer.doit.com/docs/start) with Cloud Analytics access.
 - The [Grafana Treemap panel plugin](https://grafana.com/grafana/plugins/marcusolsson-treemap-panel/) for exported dashboards that contain treemap reports.
 
 ## Configuration
@@ -23,10 +23,10 @@ Visualize your multicloud cost analytics from [DoiT Cloud Intelligence](https://
 1. In Grafana, go to **Connections → Data sources → Add new data source** and select **DoiT Cloud Intelligence**.
 2. Set the following options:
 
-   | Option  | Description                                                            |
-   | ------- | ---------------------------------------------------------------------- |
-   | API URL | DoiT API base URL. Defaults to `https://api.doit.com`.                 |
-   | API Key | Your DoiT API key (stored encrypted via Grafana secure JSON data).     |
+   | Option  | Description                                                        |
+   | ------- | ------------------------------------------------------------------ |
+   | API URL | DoiT API base URL. Defaults to `https://api.doit.com`.             |
+   | API Key | Your DoiT API key (stored encrypted via Grafana secure JSON data). |
 
 3. Click **Save & test**. The health check verifies connectivity and the API key.
 
