@@ -107,6 +107,42 @@ func TestFramesFromResult_Table(t *testing.T) {
 	}
 }
 
+func TestTreemapFramesFromResult_BuildsHierarchyAndAggregatesValues(t *testing.T) {
+	result := &doitapi.ReportResult{
+		Schema: []doitapi.SchemaField{
+			{Name: "service_description", Type: "string"},
+			{Name: "sku_description", Type: "string"},
+			{Name: "cost", Type: "float"},
+			{Name: "timestamp", Type: "timestamp"},
+		},
+		Rows: [][]json.RawMessage{
+			{raw(`"BigQuery"`), raw(`"Analysis"`), raw(`10.5`), raw(`0`)},
+			{raw(`"BigQuery"`), raw(`"Analysis"`), raw(`1.5`), raw(`0`)},
+			{raw(`"Compute Engine"`), raw(`"VMs"`), raw(`20`), raw(`0`)},
+		},
+	}
+
+	frames, err := TreemapFramesFromResult("test", result)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	frame := frames[0]
+	if len(frame.Fields) != 2 {
+		t.Fatalf("expected 2 fields, got %d", len(frame.Fields))
+	}
+
+	if got := frame.Fields[0].At(0); got != "BigQuery"+treemapHierarchySeparator+"Analysis" {
+		t.Errorf("unexpected first hierarchy path: %v", got)
+	}
+	if got := frame.Fields[1].At(0); got != 12.0 {
+		t.Errorf("unexpected aggregated value: %v", got)
+	}
+	if got := frame.Fields[0].At(1); got != "Compute Engine"+treemapHierarchySeparator+"VMs" {
+		t.Errorf("unexpected second hierarchy path: %v", got)
+	}
+}
+
 func TestFramesFromResult_TimeSeriesExcludesDatePartColumns(t *testing.T) {
 	result := &doitapi.ReportResult{
 		Schema: []doitapi.SchemaField{

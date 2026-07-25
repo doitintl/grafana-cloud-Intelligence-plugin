@@ -39,7 +39,7 @@
     "screenshots": [
       {
         "name": "Cloud cost dashboard powered by DoiT reports",
-        "path": "img/screenshot-dashboard.png"
+        "path": "img/grafana-pulse-dark.png"
       }
     ],
     "version": "%VERSION%",

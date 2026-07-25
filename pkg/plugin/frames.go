@@ -13,6 +13,7 @@ import (
 )
 
 const timestampFieldType = "timestamp"
+const treemapHierarchySeparator = "\x1f"
 
 // FramesFromResult converts a DoiT report result into Grafana data frames.
 // Results with a trailing timestamp column become one wide time-series frame
@@ -36,6 +37,68 @@ func FramesFromResult(name string, result *doitapi.ReportResult) (data.Frames, e
 	if err != nil {
 		return nil, err
 	}
+
+	return data.Frames{frame}, nil
+}
+
+func TreemapFramesFromResult(name string, result *doitapi.ReportResult) (data.Frames, error) {
+	if result == nil || len(result.Schema) == 0 {
+		return data.Frames{data.NewFrame(name)}, nil
+	}
+
+	metricIdxs, dimensionIdxs := classifyColumns(result.Schema, timestampIndex(result.Schema))
+	if len(metricIdxs) == 0 {
+		return nil, fmt.Errorf("treemap result has no numeric metric")
+	}
+	if len(dimensionIdxs) == 0 {
+		return nil, fmt.Errorf("treemap result has no dimensions")
+	}
+
+	metricIdx := metricIdxs[0]
+	totals := make(map[string]float64)
+	order := make([]string, 0, len(result.Rows))
+
+	for _, row := range result.Rows {
+		pathParts := make([]string, 0, len(dimensionIdxs))
+		for _, dimensionIdx := range dimensionIdxs {
+			if dimensionIdx >= len(row) {
+				continue
+			}
+
+			value := rawToString(row[dimensionIdx])
+			if value != "" {
+				pathParts = append(pathParts, value)
+			}
+		}
+
+		if len(pathParts) == 0 || metricIdx >= len(row) {
+			continue
+		}
+
+		value, err := rawToFloat(row[metricIdx])
+		if err != nil {
+			continue
+		}
+
+		path := strings.Join(pathParts, treemapHierarchySeparator)
+		if _, exists := totals[path]; !exists {
+			order = append(order, path)
+		}
+		totals[path] += value
+	}
+
+	paths := make([]string, 0, len(order))
+	values := make([]float64, 0, len(order))
+	for _, path := range order {
+		paths = append(paths, path)
+		values = append(values, totals[path])
+	}
+
+	frame := data.NewFrame(
+		name,
+		data.NewField("path", nil, paths),
+		data.NewField(result.Schema[metricIdx].Name, nil, values),
+	)
 
 	return data.Frames{frame}, nil
 }
