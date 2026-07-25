@@ -31,6 +31,7 @@ export interface DoitQuery extends DataQuery {
   reportId?: string;
   reportName?: string;
   useGrafanaTimeRange?: boolean;
+  resultFormat?: 'treemap';
   config?: AdHocConfig;
 }
 

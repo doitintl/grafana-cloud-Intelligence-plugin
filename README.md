@@ -1,12 +1,12 @@
 # DoiT Cloud Intelligence data source for Grafana
 
-Visualize your multicloud cost analytics from [DoiT Cloud Intelligence](https://www.doit.com/platform/) directly in Grafana. The plugin queries the [DoiT API](https://developer.doit.com/) live — no data export or sync required — so your dashboards always reflect the latest Cloud Analytics data across AWS, Google Cloud, and Azure.
+Visualize your multicloud cost analytics from [DoiT Cloud Intelligence](https://www.doit.com/platform/) directly in Grafana. The plugin queries the [DoiT API](https://developer.doit.com/) directly, with no data export or sync required.
 
-![Cloud cost dashboard powered by DoiT reports](https://raw.githubusercontent.com/doitintl/grafana-cloud-intelligence-plugin/main/src/img/screenshot-dashboard.png)
+![Cloud cost dashboard powered by DoiT reports](https://raw.githubusercontent.com/doitintl/grafana-cloud-intelligence-plugin/main/src/img/grafana-pulse-dark.png)
 
 ## Features
 
-- **Saved reports**: Run any Cloud Analytics report from your DoiT Console and render its results as Grafana time series or tables.
+- **Saved reports**: Run any Cloud Analytics report from your DoiT Console and render its results as Grafana time series, tables, or treemaps.
 - **Ad-hoc queries**: Build cost queries in Grafana — pick a metric (cost, usage, savings), group by dimensions (service, project, SKU, labels, …), and apply filters, without creating a report in the DoiT Console first.
 - **Grafana time range**: Report queries can follow the dashboard time picker instead of the report's own time settings.
 - **Alerting**: The data source supports Grafana Alerting; build alert rules on top of any report or ad-hoc query.
@@ -16,6 +16,7 @@ Visualize your multicloud cost analytics from [DoiT Cloud Intelligence](https://
 
 - Grafana 12.3.0 or later.
 - A DoiT Cloud Intelligence account and a [DoiT API key](https://developer.doit.com/docs/start) with Cloud Analytics access.
+- The [Grafana Treemap panel plugin](https://grafana.com/grafana/plugins/marcusolsson-treemap-panel/) for exported dashboards that contain treemap reports.
 
 ## Configuration
 
@@ -61,7 +62,9 @@ datasources:
 2. Choose a metric, time interval, and aggregation.
 3. Add group-by dimensions and filters as needed.
 
-Results are returned as time series frames (one series per group) suitable for time series, bar chart, and stat panels, or as a table for tabular reports.
+Results are returned as time series frames (one series per group) suitable for time series, bar chart, and stat panels, or as a table for tabular reports. Treemap panels exported by DoiT Console receive a hierarchy frame compatible with the Grafana Treemap panel plugin.
+
+Successful saved-report and ad-hoc query results are cached for six hours per data source instance. Dashboard data can therefore be up to six hours old. API queries run one at a time per data source instance to avoid upstream throttling; additional panel queries wait for the active query to finish. Timed-out queries are not cached; try a shorter time range.
 
 ### Alerting
 

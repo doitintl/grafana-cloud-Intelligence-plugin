@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
+	"github.com/grafana/grafana-plugin-sdk-go/data"
 
 	"github.com/doitintl/grafana-cloud-intelligence-plugin/pkg/doitapi"
 	"github.com/doitintl/grafana-cloud-intelligence-plugin/pkg/models"
@@ -27,11 +29,23 @@ var (
 const (
 	queryTypeSavedReport = "report"
 	queryTypeAdHoc       = "query"
+	resultFormatTreemap  = "treemap"
 
 	dateFormat = "2006-01-02"
 
 	reportQueryTimeout = 5 * time.Minute
 )
+
+type queryAPI interface {
+	RunReport(ctx context.Context, reportID, startDate, endDate string) (*doitapi.RunReportResponse, error)
+	RunQuery(ctx context.Context, config json.RawMessage) (*doitapi.RunQueryResponse, error)
+}
+
+type metadataAPI interface {
+	ListReports(ctx context.Context) ([]doitapi.ReportListItem, error)
+	ListDimensions(ctx context.Context) ([]doitapi.Dimension, error)
+	GetDimensionValues(ctx context.Context, dimensionType, dimensionID string) (*doitapi.DimensionResponse, error)
+}
 
 func NewDatasource(ctx context.Context, settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
 	pluginSettings, err := models.LoadPluginSettings(settings)
@@ -59,20 +73,33 @@ func NewDatasource(ctx context.Context, settings backend.DataSourceInstanceSetti
 		return nil, err
 	}
 
-	ds := &Datasource{
-		client: doitapi.NewClient(pluginSettings.APIURL, pluginSettings.Secrets.APIKey, httpClient),
-	}
+	client := doitapi.NewClient(pluginSettings.APIURL, pluginSettings.Secrets.APIKey, httpClient)
+	ds := newDatasource(client, client, time.Now)
 	ds.resourceHandler = httpadapter.New(ds.resourceMux())
 
 	return ds, nil
 }
 
 type Datasource struct {
-	client          *doitapi.Client
+	queryClient     queryAPI
+	metadataClient  metadataAPI
+	queries         *queryCoordinator
 	resourceHandler backend.CallResourceHandler
 }
 
-func (d *Datasource) Dispose() {}
+func newDatasource(queryClient queryAPI, metadataClient metadataAPI, now func() time.Time) *Datasource {
+	return &Datasource{
+		queryClient:    queryClient,
+		metadataClient: metadataClient,
+		queries:        newQueryCoordinator(now),
+	}
+}
+
+func (d *Datasource) Dispose() {
+	if d.queries != nil {
+		d.queries.Close()
+	}
+}
 
 type queryModel struct {
 	QueryType      string          `json:"doitQueryType"`
@@ -80,13 +107,22 @@ type queryModel struct {
 	ReportName     string          `json:"reportName"`
 	Config         json.RawMessage `json:"config"`
 	UseGrafanaTime bool            `json:"useGrafanaTimeRange"`
+	ResultFormat   string          `json:"resultFormat"`
 }
 
 func (d *Datasource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
 	response := backend.NewQueryDataResponse()
 
 	for _, q := range req.Queries {
+		if err := ctx.Err(); err != nil {
+			return response, err
+		}
+
 		response.Responses[q.RefID] = d.query(ctx, q)
+
+		if err := ctx.Err(); err != nil {
+			return response, err
+		}
 	}
 
 	return response, nil
@@ -95,7 +131,7 @@ func (d *Datasource) QueryData(ctx context.Context, req *backend.QueryDataReques
 func (d *Datasource) query(ctx context.Context, query backend.DataQuery) backend.DataResponse {
 	var qm queryModel
 	if err := json.Unmarshal(query.JSON, &qm); err != nil {
-		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("json unmarshal: %v", err))
+		return pluginErrorResponse(backend.StatusBadRequest, fmt.Sprintf("json unmarshal: %v", err))
 	}
 
 	switch qm.QueryType {
@@ -104,13 +140,13 @@ func (d *Datasource) query(ctx context.Context, query backend.DataQuery) backend
 	case queryTypeAdHoc:
 		return d.queryAdHoc(ctx, qm)
 	default:
-		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("unknown query type: %s", qm.QueryType))
+		return pluginErrorResponse(backend.StatusBadRequest, fmt.Sprintf("unknown query type: %s", qm.QueryType))
 	}
 }
 
 func (d *Datasource) querySavedReport(ctx context.Context, query backend.DataQuery, qm queryModel) backend.DataResponse {
 	if qm.ReportID == "" {
-		return backend.ErrDataResponse(backend.StatusBadRequest, "report is not selected")
+		return pluginErrorResponse(backend.StatusBadRequest, "report is not selected")
 	}
 
 	startDate, endDate := "", ""
@@ -119,37 +155,75 @@ func (d *Datasource) querySavedReport(ctx context.Context, query backend.DataQue
 		endDate = query.TimeRange.To.UTC().Format(dateFormat)
 	}
 
-	resp, err := d.client.RunReport(ctx, qm.ReportID, startDate, endDate)
+	key := makeQueryCacheKey(queryTypeSavedReport, []byte(qm.ReportID), startDate, endDate)
+	result, err := d.queries.do(ctx, key, func(queryContext context.Context) (cachedQueryResult, error) {
+		resp, err := d.queryClient.RunReport(queryContext, qm.ReportID, startDate, endDate)
+		if err != nil {
+			return cachedQueryResult{}, err
+		}
+
+		name := resp.ReportName
+		if name == "" {
+			name = qm.ReportID
+		}
+
+		result := cachedQueryResult{name: name, result: resp.Result}
+		if _, err := FramesFromResult(result.name, &result.result); err != nil {
+			return cachedQueryResult{}, fmt.Errorf("transform result: %w", err)
+		}
+
+		return result, nil
+	})
 	if err != nil {
 		return apiErrorResponse(err)
 	}
 
-	name := resp.ReportName
-	if name == "" {
-		name = qm.ReportID
-	}
-
-	frames, err := FramesFromResult(name, &resp.Result)
+	frames, err := framesFromResult(result.name, &result.result, qm.ResultFormat)
 	if err != nil {
-		return backend.ErrDataResponse(backend.StatusInternal, fmt.Sprintf("transform result: %v", err))
+		return pluginErrorResponse(backend.StatusInternal, fmt.Sprintf("transform result: %v", err))
 	}
 
 	return backend.DataResponse{Frames: frames}
 }
 
-func (d *Datasource) queryAdHoc(ctx context.Context, qm queryModel) backend.DataResponse {
-	if len(qm.Config) == 0 {
-		return backend.ErrDataResponse(backend.StatusBadRequest, "query config is empty")
+func framesFromResult(name string, result *doitapi.ReportResult, resultFormat string) (data.Frames, error) {
+	if resultFormat == resultFormatTreemap {
+		return TreemapFramesFromResult(name, result)
 	}
 
-	resp, err := d.client.RunQuery(ctx, qm.Config)
+	return FramesFromResult(name, result)
+}
+
+func (d *Datasource) queryAdHoc(ctx context.Context, qm queryModel) backend.DataResponse {
+	if len(qm.Config) == 0 {
+		return pluginErrorResponse(backend.StatusBadRequest, "query config is empty")
+	}
+
+	key, err := makeAdHocQueryCacheKey(qm.Config)
+	if err != nil {
+		return pluginErrorResponse(backend.StatusBadRequest, "query config is invalid")
+	}
+
+	result, err := d.queries.do(ctx, key, func(queryContext context.Context) (cachedQueryResult, error) {
+		resp, err := d.queryClient.RunQuery(queryContext, qm.Config)
+		if err != nil {
+			return cachedQueryResult{}, err
+		}
+
+		result := cachedQueryResult{name: "query", result: resp.Result}
+		if _, err := FramesFromResult(result.name, &result.result); err != nil {
+			return cachedQueryResult{}, fmt.Errorf("transform result: %w", err)
+		}
+
+		return result, nil
+	})
 	if err != nil {
 		return apiErrorResponse(err)
 	}
 
-	frames, err := FramesFromResult("query", &resp.Result)
+	frames, err := FramesFromResult(result.name, &result.result)
 	if err != nil {
-		return backend.ErrDataResponse(backend.StatusInternal, fmt.Sprintf("transform result: %v", err))
+		return pluginErrorResponse(backend.StatusInternal, fmt.Sprintf("transform result: %v", err))
 	}
 
 	return backend.DataResponse{Frames: frames}
@@ -159,18 +233,60 @@ func apiErrorResponse(err error) backend.DataResponse {
 	var apiErr *doitapi.APIError
 	if errors.As(err, &apiErr) {
 		switch apiErr.StatusCode {
-		case http.StatusUnauthorized, http.StatusForbidden:
-			return backend.ErrDataResponse(backend.StatusUnauthorized, apiErr.Error())
+		case http.StatusBadRequest:
+			return downstreamErrorResponse(backend.StatusBadRequest, "Invalid query. Check the report or query configuration.")
+		case http.StatusUnauthorized:
+			return downstreamErrorResponse(backend.StatusUnauthorized, "Authentication failed. Check the DoiT API key.")
+		case http.StatusForbidden:
+			return downstreamErrorResponse(backend.StatusForbidden, "Access denied. Check the API key permissions.")
 		case http.StatusNotFound:
-			return backend.ErrDataResponse(backend.StatusNotFound, apiErr.Error())
+			return downstreamErrorResponse(backend.StatusNotFound, "The report or query was not found.")
+		case http.StatusRequestTimeout, http.StatusGatewayTimeout, 524:
+			return downstreamErrorResponse(backend.StatusTimeout, "The report query timed out. Try a shorter time range.")
 		case http.StatusTooManyRequests:
-			return backend.ErrDataResponse(backend.StatusTooManyRequests, apiErr.Error())
+			return downstreamErrorResponse(backend.StatusTooManyRequests, "Too many report queries are running. Wait before refreshing.")
 		default:
-			return backend.ErrDataResponse(backend.StatusBadRequest, apiErr.Error())
+			if apiErr.StatusCode >= 500 {
+				return downstreamErrorResponse(backend.StatusBadGateway, "The DoiT API is temporarily unavailable. Try again later.")
+			}
+
+			return downstreamErrorResponse(backend.StatusBadRequest, "The DoiT API rejected the query. Check its configuration.")
 		}
 	}
 
-	return backend.ErrDataResponse(backend.StatusInternal, err.Error())
+	if errors.Is(err, context.DeadlineExceeded) {
+		return downstreamErrorResponse(backend.StatusTimeout, "The report query timed out. Try a shorter time range.")
+	}
+
+	if errors.Is(err, context.Canceled) {
+		response := pluginErrorResponse(backend.StatusInternal, context.Canceled.Error())
+		response.Error = err
+
+		return response
+	}
+
+	if errors.Is(err, errQueryQueueFull) {
+		return pluginErrorResponse(backend.StatusTooManyRequests, "Too many report queries are running. Wait before refreshing.")
+	}
+
+	if errors.Is(err, errCoordinatorClosed) {
+		return pluginErrorResponse(backend.StatusInternal, "The data source is shutting down.")
+	}
+
+	var networkError net.Error
+	if errors.As(err, &networkError) {
+		return downstreamErrorResponse(backend.StatusBadGateway, "Could not reach the DoiT API. Try again.")
+	}
+
+	return pluginErrorResponse(backend.StatusInternal, "The query failed. Try again.")
+}
+
+func pluginErrorResponse(status backend.Status, message string) backend.DataResponse {
+	return backend.ErrDataResponseWithSource(status, backend.ErrorSourcePlugin, message)
+}
+
+func downstreamErrorResponse(status backend.Status, message string) backend.DataResponse {
+	return backend.ErrDataResponseWithSource(status, backend.ErrorSourceDownstream, message)
 }
 
 func (d *Datasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
@@ -189,7 +305,7 @@ func (d *Datasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRe
 		}, nil
 	}
 
-	if _, err := d.client.ListDimensions(ctx); err != nil {
+	if _, err := d.metadataClient.ListDimensions(ctx); err != nil {
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
 			Message: fmt.Sprintf("Cannot reach DoiT API: %v", err),
@@ -210,7 +326,7 @@ func (d *Datasource) resourceMux() *http.ServeMux {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /reports", func(w http.ResponseWriter, r *http.Request) {
-		reports, err := d.client.ListReports(r.Context())
+		reports, err := d.metadataClient.ListReports(r.Context())
 		if err != nil {
 			writeResourceError(w, err)
 			return
@@ -220,7 +336,7 @@ func (d *Datasource) resourceMux() *http.ServeMux {
 	})
 
 	mux.HandleFunc("GET /dimensions", func(w http.ResponseWriter, r *http.Request) {
-		dimensions, err := d.client.ListDimensions(r.Context())
+		dimensions, err := d.metadataClient.ListDimensions(r.Context())
 		if err != nil {
 			writeResourceError(w, err)
 			return
@@ -238,7 +354,7 @@ func (d *Datasource) resourceMux() *http.ServeMux {
 			return
 		}
 
-		dimension, err := d.client.GetDimensionValues(r.Context(), dimensionType, dimensionID)
+		dimension, err := d.metadataClient.GetDimensionValues(r.Context(), dimensionType, dimensionID)
 		if err != nil {
 			writeResourceError(w, err)
 			return

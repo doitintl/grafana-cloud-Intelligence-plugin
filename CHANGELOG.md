@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.1.0 (2026-07-25)
+
+**Features:**
+
+- Cache successful report and ad-hoc query results for six hours
+- Deduplicate identical in-flight requests and run API queries sequentially
+- Return hierarchy frames for treemap dashboards exported from DoiT Console
+
+**Improvements:**
+
+- Show actionable authentication, throttling, timeout, network, and upstream service errors
+- Allow queued queries to use their full execution timeout
+
 ## 1.0.0 (2026-07-24)
 
 Initial release.
