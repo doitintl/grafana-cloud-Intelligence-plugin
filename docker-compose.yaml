@@ -4,7 +4,7 @@ services:
       file: .config/docker-compose-base.yaml
       service: grafana
     ports: !override
-      - 3002:3000/tcp
+      - ${GRAFANA_PORT:-3002}:3000/tcp
       - 2345:2345
     environment:
       DOIT_API_URL: ${DOIT_API_URL:-https://api.doit.com}
