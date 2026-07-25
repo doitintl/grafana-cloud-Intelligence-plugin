@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.1 (2026-07-25)
+
+**Improvements:**
+
+- Build release artifacts with the plugin's required Go and Node.js toolchains
+- Restore Grafana E2E coverage across supported and nightly versions
+
 ## 1.1.0 (2026-07-25)
 
 **Features:**
