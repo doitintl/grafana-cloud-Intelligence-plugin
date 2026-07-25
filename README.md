@@ -2,7 +2,8 @@
 
 Visualize your multicloud cost analytics from [Cloud Intelligence™](https://www.doit.com/platform/) directly in Grafana. The plugin queries the [DoiT API](https://developer.doit.com/) live — no data export or sync required — so your dashboards always reflect the latest Cloud Analytics data across AWS, Google Cloud, Azure, Oracle Cloud and over [40 additional integrations](https://www.doit.com/integrations).
 
-![Cloud cost dashboard powered by DoiT reports](https://raw.githubusercontent.com/doitintl/grafana-cloud-intelligence-plugin/main/src/img/screenshot-dashboard.png)
+![Cloud cost dashboard powered by DoiT reports](<img width="1772" height="1227" alt="image" src="https://github.com/user-attachments/assets/b1f42ad9-902c-4bfa-8ee9-40efdb9ad409" />
+)
 
 ## Features
 
