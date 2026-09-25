@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Node.js 22+
-- Go 1.24+
+- Go 1.26.6 or later
 - [Mage](https://magefile.org/)
 - Docker (for the local Grafana instance)
 

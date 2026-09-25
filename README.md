@@ -7,7 +7,7 @@ Visualize your multicloud cost analytics from [Cloud Intelligence™](https://ww
 ## Features
 
 - **Saved reports**: Run any Cloud Analytics report from your DoiT Console and render its results as Grafana time series, tables, or treemaps.
-- **Ad-hoc queries**: Build cost queries in Grafana — pick a metric (cost, usage, savings), group by dimensions (service, project, SKU, labels, …), and apply filters, without creating a report in the DoiT Console first.
+- **Ad-hoc queries**: Build cost queries in Grafana — pick a metric (cost, usage, or savings), a time interval, and the dimensions to group by (service, project, SKU, labels, …), without creating a report in the DoiT Console first.
 - **Grafana time range**: Report queries can follow the dashboard time picker instead of the report's own time settings.
 - **Alerting**: The data source supports Grafana Alerting; build alert rules on top of any report or ad-hoc query.
 - **Dashboard export from DoiT Console**: The DoiT Console can generate ready-made Grafana dashboard JSON from any Cloud Analytics dashboard or report for use with this data source.
@@ -52,15 +52,17 @@ datasources:
 ### Query a saved report
 
 1. Add a panel and choose the **DoiT Cloud Intelligence** data source.
-2. Set **Query type** to **Report**.
-3. Select a report from the drop-down (populated from your DoiT account).
-4. Optionally enable **Use Grafana time range** to override the report's time settings with the dashboard time picker.
+2. Set **Query type** to **Saved report**.
+3. Select a report from the **Report** drop-down (populated from your DoiT account).
+4. Leave **Use dashboard time** enabled to override the report's time settings with the dashboard time picker, or disable it to use the time range saved in the report.
 
 ### Ad-hoc query
 
-1. Set **Query type** to **Query**.
-2. Choose a metric, time interval, and aggregation.
-3. Add group-by dimensions and filters as needed.
+1. Set **Query type** to **Ad-hoc query**.
+2. Choose a **Metric** (cost, usage, or savings) and a **Time interval** (hour, day, week, or month).
+3. Select one or more **Group by** dimensions (populated from your DoiT account).
+
+Ad-hoc queries total the selected metric over the last 30 days; they do not follow the dashboard time picker. The query editor has no controls for filters or other aggregations. To filter or aggregate differently, create a report in the DoiT Console and query it as a saved report. Ad-hoc queries whose JSON already contains filters or aggregation settings (for example in a provisioned dashboard) are run as configured.
 
 Results are returned as time series frames (one series per group) suitable for time series, bar chart, and stat panels, or as a table for tabular reports. Treemap panels exported by DoiT Console receive a hierarchy frame compatible with the Grafana Treemap panel plugin.
 

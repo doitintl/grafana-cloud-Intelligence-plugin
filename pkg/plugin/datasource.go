@@ -229,64 +229,86 @@ func (d *Datasource) queryAdHoc(ctx context.Context, qm queryModel) backend.Data
 	return backend.DataResponse{Frames: frames}
 }
 
-func apiErrorResponse(err error) backend.DataResponse {
+// userFacingError is how an error from the DoiT API or the query pipeline is
+// reported to users. Messages are fixed strings chosen by status: they never
+// include upstream response bodies, hostnames, or other transport details.
+// The underlying error is logged for operators instead.
+type userFacingError struct {
+	status  backend.Status
+	source  backend.ErrorSource
+	message string
+}
+
+func downstreamError(status backend.Status, message string) userFacingError {
+	return userFacingError{status: status, source: backend.ErrorSourceDownstream, message: message}
+}
+
+func pluginError(status backend.Status, message string) userFacingError {
+	return userFacingError{status: status, source: backend.ErrorSourcePlugin, message: message}
+}
+
+func classifyError(err error) userFacingError {
 	var apiErr *doitapi.APIError
 	if errors.As(err, &apiErr) {
 		switch apiErr.StatusCode {
 		case http.StatusBadRequest:
-			return downstreamErrorResponse(backend.StatusBadRequest, "Invalid query. Check the report or query configuration.")
+			return downstreamError(backend.StatusBadRequest, "Invalid query. Check the report or query configuration.")
 		case http.StatusUnauthorized:
-			return downstreamErrorResponse(backend.StatusUnauthorized, "Authentication failed. Check the DoiT API key.")
+			return downstreamError(backend.StatusUnauthorized, "Authentication failed. Check the DoiT API key.")
 		case http.StatusForbidden:
-			return downstreamErrorResponse(backend.StatusForbidden, "Access denied. Check the API key permissions.")
+			return downstreamError(backend.StatusForbidden, "Access denied. Check the API key permissions.")
 		case http.StatusNotFound:
-			return downstreamErrorResponse(backend.StatusNotFound, "The report or query was not found.")
+			return downstreamError(backend.StatusNotFound, "The report or query was not found.")
 		case http.StatusRequestTimeout, http.StatusGatewayTimeout, 524:
-			return downstreamErrorResponse(backend.StatusTimeout, "The report query timed out. Try a shorter time range.")
+			return downstreamError(backend.StatusTimeout, "The report query timed out. Try a shorter time range.")
 		case http.StatusTooManyRequests:
-			return downstreamErrorResponse(backend.StatusTooManyRequests, "Too many report queries are running. Wait before refreshing.")
+			return downstreamError(backend.StatusTooManyRequests, "Too many report queries are running. Wait before refreshing.")
 		default:
 			if apiErr.StatusCode >= 500 {
-				return downstreamErrorResponse(backend.StatusBadGateway, "The DoiT API is temporarily unavailable. Try again later.")
+				return downstreamError(backend.StatusBadGateway, "The DoiT API is temporarily unavailable. Try again later.")
 			}
 
-			return downstreamErrorResponse(backend.StatusBadRequest, "The DoiT API rejected the query. Check its configuration.")
+			return downstreamError(backend.StatusBadRequest, "The DoiT API rejected the query. Check its configuration.")
 		}
 	}
 
 	if errors.Is(err, context.DeadlineExceeded) {
-		return downstreamErrorResponse(backend.StatusTimeout, "The report query timed out. Try a shorter time range.")
+		return downstreamError(backend.StatusTimeout, "The report query timed out. Try a shorter time range.")
 	}
 
 	if errors.Is(err, context.Canceled) {
-		response := pluginErrorResponse(backend.StatusInternal, context.Canceled.Error())
-		response.Error = err
-
-		return response
+		return pluginError(backend.StatusInternal, context.Canceled.Error())
 	}
 
 	if errors.Is(err, errQueryQueueFull) {
-		return pluginErrorResponse(backend.StatusTooManyRequests, "Too many report queries are running. Wait before refreshing.")
+		return pluginError(backend.StatusTooManyRequests, "Too many report queries are running. Wait before refreshing.")
 	}
 
 	if errors.Is(err, errCoordinatorClosed) {
-		return pluginErrorResponse(backend.StatusInternal, "The data source is shutting down.")
+		return pluginError(backend.StatusInternal, "The data source is shutting down.")
 	}
 
 	var networkError net.Error
 	if errors.As(err, &networkError) {
-		return downstreamErrorResponse(backend.StatusBadGateway, "Could not reach the DoiT API. Try again.")
+		return downstreamError(backend.StatusBadGateway, "Could not reach the DoiT API. Try again.")
 	}
 
-	return pluginErrorResponse(backend.StatusInternal, "The query failed. Try again.")
+	return pluginError(backend.StatusInternal, "The query failed. Try again.")
+}
+
+func apiErrorResponse(err error) backend.DataResponse {
+	info := classifyError(err)
+	response := backend.ErrDataResponseWithSource(info.status, info.source, info.message)
+
+	if errors.Is(err, context.Canceled) {
+		response.Error = err
+	}
+
+	return response
 }
 
 func pluginErrorResponse(status backend.Status, message string) backend.DataResponse {
 	return backend.ErrDataResponseWithSource(status, backend.ErrorSourcePlugin, message)
-}
-
-func downstreamErrorResponse(status backend.Status, message string) backend.DataResponse {
-	return backend.ErrDataResponseWithSource(status, backend.ErrorSourceDownstream, message)
 }
 
 func (d *Datasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
@@ -306,9 +328,11 @@ func (d *Datasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRe
 	}
 
 	if _, err := d.metadataClient.ListDimensions(ctx); err != nil {
+		backend.Logger.Warn("Health check failed", "error", err)
+
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
-			Message: fmt.Sprintf("Cannot reach DoiT API: %v", err),
+			Message: healthCheckMessage(err),
 		}, nil
 	}
 
@@ -316,6 +340,32 @@ func (d *Datasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRe
 		Status:  backend.HealthStatusOk,
 		Message: "Successfully connected to the DoiT API",
 	}, nil
+}
+
+// healthCheckMessage returns the "Save & test" message for a failed
+// connectivity check. Like classifyError, it never exposes upstream details.
+func healthCheckMessage(err error) string {
+	var apiErr *doitapi.APIError
+	if errors.As(err, &apiErr) {
+		switch {
+		case apiErr.StatusCode == http.StatusUnauthorized:
+			return "Authentication failed. Check the DoiT API key."
+		case apiErr.StatusCode == http.StatusForbidden:
+			return "Access denied. Check the API key permissions."
+		case apiErr.StatusCode == http.StatusTooManyRequests:
+			return "The DoiT API is throttling requests. Wait a moment and try again."
+		case apiErr.StatusCode >= 500:
+			return "The DoiT API is temporarily unavailable. Try again later."
+		default:
+			return "The DoiT API returned an unexpected response. Check the API URL."
+		}
+	}
+
+	if errors.Is(err, context.DeadlineExceeded) {
+		return "The connection to the DoiT API timed out. Try again."
+	}
+
+	return "Could not reach the DoiT API. Check the API URL and network connectivity."
 }
 
 func (d *Datasource) CallResource(ctx context.Context, req *backend.CallResourceRequest, sender backend.CallResourceResponseSender) error {
@@ -370,16 +420,22 @@ func writeJSON(w http.ResponseWriter, payload any) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if err := json.NewEncoder(w).Encode(payload); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		backend.Logger.Error("Failed to encode resource response", "error", err)
+		http.Error(w, "Failed to encode the response.", http.StatusInternalServerError)
 	}
 }
 
+// writeResourceError reports a failed resource call with a sanitized message.
+// Upstream response bodies and connection errors are logged, not returned.
 func writeResourceError(w http.ResponseWriter, err error) {
-	var apiErr *doitapi.APIError
-	if errors.As(err, &apiErr) {
-		http.Error(w, apiErr.Error(), apiErr.StatusCode)
-		return
+	backend.Logger.Warn("Resource call failed", "error", err)
+
+	info := classifyError(err)
+
+	status := int(info.status)
+	if status < http.StatusBadRequest || status > 599 {
+		status = http.StatusInternalServerError
 	}
 
-	http.Error(w, err.Error(), http.StatusInternalServerError)
+	http.Error(w, info.message, status)
 }

@@ -18,3 +18,18 @@ test('"Save & test" should fail when the API key is missing', async ({
   await expect(configPage.saveAndTest()).not.toBeOK();
   await expect(configPage).toHaveAlert('error', { hasText: 'API key is missing' });
 });
+
+test('"Save & test" should not expose connection details when the API is unreachable', async ({
+  createDataSourceConfigPage,
+  readProvisionedDataSource,
+  page,
+}) => {
+  const ds = await readProvisionedDataSource({ fileName: 'datasources.yml' });
+  const configPage = await createDataSourceConfigPage({ type: ds.type });
+  // Port 9 (discard) is closed in the Grafana container, so the backend gets a connection error.
+  await page.getByRole('textbox', { name: 'API URL' }).fill('http://127.0.0.1:9');
+  await page.getByRole('textbox', { name: 'API Key' }).fill('not-a-real-key');
+  await expect(configPage.saveAndTest()).not.toBeOK();
+  await expect(configPage).toHaveAlert('error', { hasText: 'Could not reach the DoiT API' });
+  await expect(page.getByText(/dial tcp|connection refused|127\.0\.0\.1:9/)).toHaveCount(0);
+});
