@@ -50,6 +50,12 @@ func (r cachedQueryResult) sizeBytes() int64 {
 		size += bytes
 	}
 	addAllocation := func(capacity int, elementSize uintptr) {
+		// capacity comes from cap(), which is never negative; the check keeps
+		// the int -> uint64 conversion provably safe (gosec G115).
+		if capacity < 0 {
+			return
+		}
+
 		capacityBytes := uint64(capacity)
 		elementBytes := uint64(elementSize)
 		if capacityBytes != 0 && elementBytes > math.MaxUint64/capacityBytes {
