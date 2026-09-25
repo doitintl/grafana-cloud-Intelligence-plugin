@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.3 (2026-09-25)
+
+**Security:**
+
+- Guard an integer conversion in the query result cache that gosec reported as a potential overflow (G115); no behavior change
+- Run gosec as part of the backend lint step
+
 ## 1.1.2 (2026-09-25)
 
 **Fixes:**
