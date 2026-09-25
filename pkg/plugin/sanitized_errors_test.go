@@ -10,9 +10,9 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 )
 
-// upstreamSecret is a marker for content that must never reach users: it is
+// upstreamBodyMarker marks content that must never reach users: it is
 // returned in upstream response bodies by the test servers below.
-const upstreamSecret = "UPSTREAM-BODY-SHOULD-NOT-LEAK"
+const upstreamBodyMarker = "UPSTREAM-BODY-SHOULD-NOT-LEAK"
 
 func healthRequest() *backend.CheckHealthRequest {
 	return &backend.CheckHealthRequest{
@@ -28,7 +28,7 @@ func healthRequest() *backend.CheckHealthRequest {
 func upstreamStatusHandler(status int) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(status)
-		_, _ = w.Write([]byte(`{"error":"` + upstreamSecret + `"}`))
+		_, _ = w.Write([]byte(`{"error":"` + upstreamBodyMarker + `"}`))
 	})
 }
 
@@ -37,7 +37,7 @@ func upstreamStatusHandler(status int) http.Handler {
 func assertSanitized(t *testing.T, message, serverURL string) {
 	t.Helper()
 
-	for _, forbidden := range []string{upstreamSecret, "status ", "dial tcp", "connection refused", "127.0.0.1", "localhost"} {
+	for _, forbidden := range []string{upstreamBodyMarker, "status ", "dial tcp", "connection refused", "127.0.0.1", "localhost"} {
 		if strings.Contains(message, forbidden) {
 			t.Errorf("message %q leaks %q", message, forbidden)
 		}
