@@ -46,3 +46,6 @@ ci/
 .idea
 
 .eslintcache
+
+# local plugin-validator npm cache
+.cache/
