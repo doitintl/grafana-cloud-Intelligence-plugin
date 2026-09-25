@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.1.2 (2026-09-25)
+
+**Fixes:**
+
+- Return sanitized messages from the data source health check and resource endpoints instead of raw upstream errors; the underlying error is logged for operators
+- Align the README usage instructions with the query editor controls
+
+**Security:**
+
+- Build the backend with Go 1.26.6 and update `golang.org/x/net`, `golang.org/x/text`, and `google.golang.org/grpc` to versions without known vulnerabilities
+
+**Improvements:**
+
+- Update Playwright E2E tooling to `@grafana/plugin-e2e` 3.14 for Grafana 13.2 and later
+
 ## 1.1.1 (2026-07-25)
 
 **Improvements:**
