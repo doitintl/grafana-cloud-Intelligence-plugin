@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.4 (2026-10-06)
+
+**Improvements:**
+
+- Publish a signed plugin package (community signature) now that the Grafana plugin review is complete
+
 ## 1.1.3 (2026-09-25)
 
 **Security:**
