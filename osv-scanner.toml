@@ -1,0 +1,13 @@
+# Vulnerability ignores for osv-scanner, which the Grafana plugin validator runs on
+# package-lock.json during releases and plugin submissions.
+# Each entry must name an advisory with no upstream fix and explain why it does not
+# affect the shipped plugin. Remove entries as soon as a fixed version exists.
+
+[[IgnoredVulns]]
+id = "GHSA-vfj7-8cjw-p6xm"
+# CVE-2026-93687: stack exhaustion in braces via deeply nested patterns.
+# braces 3.0.3 is the latest release and no fixed version exists
+# (https://github.com/micromatch/braces/issues/70). braces is reached only through
+# eslint-webpack-plugin -> micromatch, a build-time lint step that matches our own
+# source paths; nothing from braces is bundled into the plugin or runs in Grafana.
+reason = "No fixed version; build-time only dependency of eslint-webpack-plugin, not shipped in the plugin"

@@ -5,6 +5,7 @@
 **Improvements:**
 
 - Publish a signed plugin package (community signature) now that the Grafana plugin review is complete
+- Resolve newly published high-severity npm advisories in build tooling (`basic-ftp`, `source-map-js`)
 
 ## 1.1.3 (2026-09-25)
 
