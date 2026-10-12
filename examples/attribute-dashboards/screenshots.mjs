@@ -5,7 +5,9 @@ const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 1920, height: 1320 }, deviceScaleFactor: 2, colorScheme: 'dark' });
 const page = await ctx.newPage();
 const login = await ctx.request.post(`${base}/login`, { data: { user: 'admin', password: 'admin' } });
-if (!login.ok()) throw new Error('login failed: ' + login.status());
+if (!login.ok()) {
+  throw new Error('login failed: ' + login.status());
+}
 const installTs = Date.now() - 50 * 86400000;
 const ann = await ctx.request.post(`${base}/api/annotations`, { data: { dashboardUID: 'ci-showback-no-tagging', time: installTs, tags: ['attribute'], text: 'Attribute sensor installed' } });
 console.log('annotation', ann.status());
