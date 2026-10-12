@@ -1,0 +1,704 @@
+{
+  "uid": "ci-showback-no-tagging",
+  "title": "Showback without tagging",
+  "description": "Allocated vs. unallocated spend and showback by team, from Attribute runtime attribution in DoiT Cloud Intelligence.",
+  "tags": [
+    "cloud-intelligence",
+    "attribute",
+    "finops"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 41,
+  "version": 1,
+  "editable": true,
+  "graphTooltip": 1,
+  "time": {
+    "from": "now-90d",
+    "to": "now"
+  },
+  "refresh": "",
+  "templating": {
+    "list": [
+      {
+        "name": "team",
+        "label": "Team",
+        "type": "query",
+        "datasource": {
+          "type": "doitintl-doitcloudintelligence-datasource",
+          "uid": "doit-cloud-intelligence"
+        },
+        "query": "dimension_values(identifier, team)",
+        "refresh": 1,
+        "includeAll": true,
+        "multi": false,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": [],
+        "hide": 0
+      },
+      {
+        "name": "report",
+        "label": "Report",
+        "type": "query",
+        "datasource": {
+          "type": "doitintl-doitcloudintelligence-datasource",
+          "uid": "doit-cloud-intelligence"
+        },
+        "query": "reports()",
+        "refresh": 1,
+        "includeAll": true,
+        "multi": false,
+        "current": {
+          "text": "Cost by team (this month)",
+          "value": "Cost by team (this month)"
+        },
+        "options": [],
+        "hide": 0
+      }
+    ]
+  },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Allocated this month",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "doitintl-doitcloudintelligence-datasource",
+        "uid": "doit-cloud-intelligence"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "doitintl-doitcloudintelligence-datasource",
+            "uid": "doit-cloud-intelligence"
+          },
+          "doitQueryType": "report",
+          "reportId": "allocated-share",
+          "reportName": "Allocated share of spend (this month)",
+          "useGrafanaTimeRange": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      },
+      "description": "Share of this month's bill attributed to a team, customer or workload. Was 43% before Attribute."
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Unallocated this month",
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "doitintl-doitcloudintelligence-datasource",
+        "uid": "doit-cloud-intelligence"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "doitintl-doitcloudintelligence-datasource",
+            "uid": "doit-cloud-intelligence"
+          },
+          "doitQueryType": "report",
+          "reportId": "unallocated-this-month",
+          "reportName": "Unallocated spend (this month)",
+          "useGrafanaTimeRange": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      },
+      "description": "Down from $2.1M / month before runtime attribution."
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Teams with a showback number",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "doitintl-doitcloudintelligence-datasource",
+        "uid": "doit-cloud-intelligence"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "doitintl-doitcloudintelligence-datasource",
+            "uid": "doit-cloud-intelligence"
+          },
+          "doitQueryType": "report",
+          "reportId": "cost-by-team",
+          "reportName": "Cost by team (this month)",
+          "useGrafanaTimeRange": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "count"
+          ],
+          "fields": "/^cost$/",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "id": 4,
+      "type": "text",
+      "title": "Tags needed",
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "<div style=\"text-align:center;font-size:38px;font-weight:500;color:#73bf69;margin-top:4px\">0</div><div style=\"text-align:center;color:#8e8e8e;font-size:12px\">runtime attribution \u00b7 existing tags stay as an input</div>"
+      }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Allocated vs. unallocated spend \u00b7 daily",
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 24,
+        "h": 9
+      },
+      "datasource": {
+        "type": "doitintl-doitcloudintelligence-datasource",
+        "uid": "doit-cloud-intelligence"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "doitintl-doitcloudintelligence-datasource",
+            "uid": "doit-cloud-intelligence"
+          },
+          "doitQueryType": "report",
+          "reportId": "allocated-vs-unallocated",
+          "reportName": "Allocated vs. unallocated spend",
+          "useGrafanaTimeRange": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "displayName": "${__field.labels.allocation_status}",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 55,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "showPoints": "never",
+            "gradientMode": "opacity"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Unallocated"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Attributed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "description": "The Attribute sensor was installed where the red area collapses; unallocated spend drops to near zero within a day."
+    },
+    {
+      "id": 6,
+      "type": "barchart",
+      "title": "Showback by team \u00b7 this month",
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "doitintl-doitcloudintelligence-datasource",
+        "uid": "doit-cloud-intelligence"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "doitintl-doitcloudintelligence-datasource",
+            "uid": "doit-cloud-intelligence"
+          },
+          "doitQueryType": "report",
+          "reportId": "cost-by-team",
+          "reportName": "Cost by team (this month)",
+          "useGrafanaTimeRange": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "always",
+        "xTickLabelSpacing": 0,
+        "barWidth": 0.7,
+        "groupWidth": 0.7,
+        "legend": {
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "table",
+      "title": "Shared resources split by consumer",
+      "gridPos": {
+        "x": 12,
+        "y": 13,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "doitintl-doitcloudintelligence-datasource",
+        "uid": "doit-cloud-intelligence"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "doitintl-doitcloudintelligence-datasource",
+            "uid": "doit-cloud-intelligence"
+          },
+          "doitQueryType": "report",
+          "reportId": "shared-resources-by-consumer",
+          "reportName": "Shared resources split by consumer",
+          "useGrafanaTimeRange": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cost"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "displayName",
+                "value": "Cost / month"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "top_consumer_share"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "displayName",
+                "value": "Share"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic",
+                  "valueDisplayMode": "text"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 190
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 1
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "resource"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Resource"
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 200
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "top_consumer"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Top consumer"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "sortBy": [
+          {
+            "displayName": "Cost / month",
+            "desc": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "type": "bargauge",
+      "title": "Team budgets \u00b7 owned by the people spending it",
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "doitintl-doitcloudintelligence-datasource",
+        "uid": "doit-cloud-intelligence"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "doitintl-doitcloudintelligence-datasource",
+            "uid": "doit-cloud-intelligence"
+          },
+          "doitQueryType": "report",
+          "reportId": "team-budget-utilization",
+          "reportName": "Team budget utilization",
+          "useGrafanaTimeRange": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "decimals": 0,
+          "displayName": "${__data.fields.team}",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 0.85
+              },
+              {
+                "color": "red",
+                "value": 0.95
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "valueMode": "color",
+        "namePlacement": "left",
+        "sizing": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "table",
+      "title": "What's still unallocated \u00b7 by service",
+      "gridPos": {
+        "x": 12,
+        "y": 22,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "doitintl-doitcloudintelligence-datasource",
+        "uid": "doit-cloud-intelligence"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "doitintl-doitcloudintelligence-datasource",
+            "uid": "doit-cloud-intelligence"
+          },
+          "doitQueryType": "report",
+          "reportId": "unallocated-by-service",
+          "reportName": "Unallocated spend by service",
+          "useGrafanaTimeRange": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cost"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "displayName",
+                "value": "Cost / month"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "service"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Service"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "workload"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Workload"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "first_seen"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "First seen"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "description": "Alert fires when this exceeds 2% of total spend for two consecutive days. New workloads without an owner show up here the day they first run."
+    }
+  ]
+}

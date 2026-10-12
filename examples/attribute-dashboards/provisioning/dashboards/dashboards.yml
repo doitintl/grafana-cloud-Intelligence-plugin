@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: Cloud Intelligence examples
+    folder: Cloud Intelligence
+    type: file
+    disableDeletion: false
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/cloud-intelligence
+      foldersFromFilesStructure: false

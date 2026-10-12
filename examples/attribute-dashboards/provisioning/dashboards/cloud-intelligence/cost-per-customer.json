@@ -1,0 +1,913 @@
+{
+  "uid": "ci-cost-per-customer",
+  "title": "Cost per customer and margin",
+  "description": "Cost to serve, gross margin and AI cost per customer from Attribute runtime attribution and DataHub revenue in DoiT Cloud Intelligence.",
+  "tags": [
+    "cloud-intelligence",
+    "attribute",
+    "finops"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 41,
+  "version": 1,
+  "editable": true,
+  "graphTooltip": 1,
+  "time": {
+    "from": "now-6M",
+    "to": "now"
+  },
+  "refresh": "",
+  "templating": {
+    "list": [
+      {
+        "name": "customer",
+        "label": "Customer",
+        "type": "query",
+        "datasource": {
+          "type": "doitintl-doitcloudintelligence-datasource",
+          "uid": "doit-cloud-intelligence"
+        },
+        "query": "dimension_values(identifier, customer)",
+        "refresh": 1,
+        "includeAll": true,
+        "multi": false,
+        "current": {
+          "text": "Northwind Retail",
+          "value": "Northwind Retail"
+        },
+        "options": [],
+        "hide": 0
+      }
+    ]
+  },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Customers detected from traffic",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "doitintl-doitcloudintelligence-datasource",
+        "uid": "doit-cloud-intelligence"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "doitintl-doitcloudintelligence-datasource",
+            "uid": "doit-cloud-intelligence"
+          },
+          "doitQueryType": "report",
+          "reportId": "customers-detected",
+          "reportName": "Customers detected from traffic",
+          "useGrafanaTimeRange": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      },
+      "description": "Customer IDs read from headers, JWT claims and API paths. 0 tags applied."
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Below 40% gross margin",
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "doitintl-doitcloudintelligence-datasource",
+        "uid": "doit-cloud-intelligence"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "doitintl-doitcloudintelligence-datasource",
+            "uid": "doit-cloud-intelligence"
+          },
+          "doitQueryType": "report",
+          "reportId": "customers-below-target",
+          "reportName": "Customers below 40% margin",
+          "useGrafanaTimeRange": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "red"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Flagged before renewal",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "doitintl-doitcloudintelligence-datasource",
+        "uid": "doit-cloud-intelligence"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "doitintl-doitcloudintelligence-datasource",
+            "uid": "doit-cloud-intelligence"
+          },
+          "doitQueryType": "report",
+          "reportId": "flagged-before-renewal",
+          "reportName": "Customers flagged before renewal",
+          "useGrafanaTimeRange": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#EAB839"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      },
+      "description": "Renewing within 90 days with trailing margin under target."
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Spend with no customer",
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "doitintl-doitcloudintelligence-datasource",
+        "uid": "doit-cloud-intelligence"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "doitintl-doitcloudintelligence-datasource",
+            "uid": "doit-cloud-intelligence"
+          },
+          "doitQueryType": "report",
+          "reportId": "no-customer-share",
+          "reportName": "Spend not attributed to a customer",
+          "useGrafanaTimeRange": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "id": 5,
+      "type": "table",
+      "title": "Customers ranked by gross margin \u00b7 lowest first",
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 24,
+        "h": 9
+      },
+      "datasource": {
+        "type": "doitintl-doitcloudintelligence-datasource",
+        "uid": "doit-cloud-intelligence"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "doitintl-doitcloudintelligence-datasource",
+            "uid": "doit-cloud-intelligence"
+          },
+          "doitQueryType": "report",
+          "reportId": "margin-by-customer",
+          "reportName": "Cost to serve and margin by customer",
+          "useGrafanaTimeRange": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "customer"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Customer"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cost_to_serve"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "displayName",
+                "value": "Cost to serve"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "revenue"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "displayName",
+                "value": "Revenue"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "margin"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "displayName",
+                "value": "Gross margin"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "basic"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "#EAB839",
+                      "value": 0.4
+                    },
+                    {
+                      "color": "green",
+                      "value": 0.55
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "renews_in_days"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Renews in"
+              },
+              {
+                "id": "unit",
+                "value": "suffix: days"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "#EAB839",
+                      "value": null
+                    },
+                    {
+                      "color": "text",
+                      "value": 90
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "sortBy": [
+          {
+            "displayName": "Gross margin",
+            "desc": false
+          }
+        ]
+      },
+      "description": "Revenue arrives through DataHub from your billing system; cost to serve comes from Attribute. Alert fires 90 days before renewal when trailing margin is under target."
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Cost to serve vs. revenue \u00b7 Northwind Retail \u00b7 6 months",
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "doitintl-doitcloudintelligence-datasource",
+        "uid": "doit-cloud-intelligence"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "doitintl-doitcloudintelligence-datasource",
+            "uid": "doit-cloud-intelligence"
+          },
+          "doitQueryType": "report",
+          "reportId": "cost-to-serve-trend",
+          "reportName": "Cost to serve vs. revenue (Northwind Retail)",
+          "useGrafanaTimeRange": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "always",
+            "pointSize": 5,
+            "spanNulls": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*cost_to_serve.*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "Cost to serve"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*revenue.*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "Revenue"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "barchart",
+      "title": "Cost by feature \u00b7 Northwind Retail",
+      "gridPos": {
+        "x": 12,
+        "y": 13,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "doitintl-doitcloudintelligence-datasource",
+        "uid": "doit-cloud-intelligence"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "doitintl-doitcloudintelligence-datasource",
+            "uid": "doit-cloud-intelligence"
+          },
+          "doitQueryType": "report",
+          "reportId": "cost-by-feature",
+          "reportName": "Cost by feature (Northwind Retail)",
+          "useGrafanaTimeRange": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "purple"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "always",
+        "barWidth": 0.7,
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "description": "Features are detected from API paths and model calls in the traffic."
+    },
+    {
+      "id": 8,
+      "type": "piechart",
+      "title": "Human vs. agent usage \u00b7 Northwind Retail",
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "doitintl-doitcloudintelligence-datasource",
+        "uid": "doit-cloud-intelligence"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "doitintl-doitcloudintelligence-datasource",
+            "uid": "doit-cloud-intelligence"
+          },
+          "doitQueryType": "report",
+          "reportId": "usage-type-split",
+          "reportName": "Human vs. agent usage (Northwind Retail)",
+          "useGrafanaTimeRange": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 0,
+          "displayName": "${__data.fields.usage_type}"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Agent"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "purple"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Human"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "pieType": "donut",
+        "displayLabels": [
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "table",
+      "title": "AI cost by model \u00b7 Northwind Retail",
+      "gridPos": {
+        "x": 12,
+        "y": 22,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "doitintl-doitcloudintelligence-datasource",
+        "uid": "doit-cloud-intelligence"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "doitintl-doitcloudintelligence-datasource",
+            "uid": "doit-cloud-intelligence"
+          },
+          "doitQueryType": "report",
+          "reportId": "ai-cost-by-model",
+          "reportName": "AI cost by model (Northwind Retail)",
+          "useGrafanaTimeRange": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "model"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Model"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "input_tokens"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "displayName",
+                "value": "Input"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic",
+                  "valueDisplayMode": "text"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 130
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 1
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "output_tokens"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "displayName",
+                "value": "Output"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic",
+                  "valueDisplayMode": "text"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 130
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 1
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "purple"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cached_tokens"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "displayName",
+                "value": "Cached"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic",
+                  "valueDisplayMode": "text"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 130
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 1
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cost"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "displayName",
+                "value": "Cost / month"
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 130
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    }
+  ]
+}
