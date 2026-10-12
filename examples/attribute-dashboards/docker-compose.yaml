@@ -1,0 +1,30 @@
+# Demo stack for the Attribute dashboards tutorial: Grafana with the plugin from ../../dist,
+# plus a mock of the DoiT API that serves sample attribution data.
+#
+#   npm run build && mage build:linuxARM64   # or build:linux on amd64 hosts
+#   docker compose -f examples/attribute-dashboards/docker-compose.yaml up --build
+#
+services:
+  mock-doit-api:
+    image: python:3.12-alpine
+    container_name: doit-mock-api
+    command: ['python', '/app/server.py']
+    volumes:
+      - ./mock-api:/app:ro
+
+  grafana:
+    extends:
+      file: ../../.config/docker-compose-base.yaml
+      service: grafana
+    depends_on:
+      - mock-doit-api
+    ports: !override
+      - ${GRAFANA_PORT:-3000}:3000/tcp
+    volumes: !override
+      - ../../dist:/var/lib/grafana/plugins/doitintl-doitcloudintelligence-datasource
+      - ./provisioning:/etc/grafana/provisioning
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_DEFAULT_THEME: dark
+      GF_INSTALL_PLUGINS: marcusolsson-treemap-panel

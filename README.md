@@ -72,6 +72,10 @@ Successful saved-report and ad-hoc query results are cached for six hours per da
 
 The data source supports Grafana Alerting. Create an alert rule, choose this data source in the query, and add expressions (reduce, threshold) as usual.
 
+## Examples
+
+- [FinOps dashboards without tagging](https://github.com/doitintl/grafana-cloud-intelligence-plugin/tree/main/examples/attribute-dashboards): two importable dashboards built on Attribute™ runtime attribution (showback by team and unallocated spend; cost per customer and margin), with a self-contained demo stack and a step-by-step guide to the reports and panels behind them.
+
 ## Getting help
 
 - [Open an issue](https://github.com/doitintl/grafana-cloud-intelligence-plugin/issues) for bugs or feature requests.
