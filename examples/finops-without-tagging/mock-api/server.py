@@ -98,6 +98,13 @@ report("shared-resources-by-consumer", "Shared resources split by consumer", lam
     "rows": [["eks/prod-us-east", 412880, "Payments", 0.47], ["NAT + cross-AZ transfer", 342007, "checkout-svc", 0.35],
              ["rds/orders-db", 96240, "Checkout", 0.61], ["kafka/events", 87115, "Search", 0.38],
              ["ec2/postgres (self-managed)", 72310, "Data", 0.52], ["elasticache/sessions", 33120, "Identity", 0.44]]})
+report("cost-by-workload", "Cost by workload on shared resources (this month)", lambda s, e: {
+    "schema": [{"name": "workload", "type": "string"}, {"name": "namespace", "type": "string"}, {"name": "resource", "type": "string"},
+               {"name": "cost", "type": "float"}, {"name": "share_of_resource", "type": "float"}],
+    "rows": [["checkout-svc", "payments", "NAT + cross-AZ transfer", 119702, 0.35], ["search-indexer", "search", "NAT + cross-AZ transfer", 95762, 0.28],
+             ["payments-api", "payments", "eks/prod-us-east", 194054, 0.47], ["search-api", "search", "eks/prod-us-east", 86705, 0.21],
+             ["assistant", "platform", "NAT + cross-AZ transfer", 61980, 0.18], ["etl-batch", "data", "rds/orders-db", 38300, 0.40],
+             ["events-consumer", "search", "kafka/events", 33104, 0.38], ["session-cache", "identity", "elasticache/sessions", 14573, 0.44]]})
 report("unallocated-by-service", "Unallocated spend by service", lambda s, e: {
     "schema": [{"name": "service", "type": "string"}, {"name": "workload", "type": "string"},
                {"name": "cost", "type": "float"}, {"name": "first_seen", "type": "string"}],

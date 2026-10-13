@@ -699,6 +699,168 @@
         "cellHeight": "sm"
       },
       "description": "Alert fires when this exceeds 2% of total spend for two consecutive days. New workloads without an owner show up here the day they first run."
+    },
+    {
+      "id": 10,
+      "type": "table",
+      "title": "Cost by workload on shared resources \u00b7 this month",
+      "gridPos": {
+        "x": 0,
+        "y": 30,
+        "w": 24,
+        "h": 8
+      },
+      "datasource": {
+        "type": "doitintl-doitcloudintelligence-datasource",
+        "uid": "doit-cloud-intelligence"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "doitintl-doitcloudintelligence-datasource",
+            "uid": "doit-cloud-intelligence"
+          },
+          "doitQueryType": "report",
+          "reportId": "cost-by-workload",
+          "reportName": "Cost by workload on shared resources (this month)",
+          "useGrafanaTimeRange": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "workload"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Workload"
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 160
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "namespace"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Namespace"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "resource"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Shared resource"
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 220
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cost"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "displayName",
+                "value": "Cost / month"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "share_of_resource"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "displayName",
+                "value": "Share of resource"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic",
+                  "valueDisplayMode": "text"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 220
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 1
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "purple"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "sortBy": [
+          {
+            "displayName": "Cost / month",
+            "desc": true
+          }
+        ]
+      },
+      "description": "Workload names come from the sensor, not from tags. Put this table next to the same service's request rate, latency and logs and a cost spike reads like any other regression."
     }
   ]
 }

@@ -2,7 +2,7 @@ import { chromium } from '@playwright/test';
 const base = process.env.GRAFANA_URL || "http://localhost:3000";
 const out = process.env.OUT || "img";
 const browser = await chromium.launch();
-const ctx = await browser.newContext({ viewport: { width: 1920, height: 1320 }, deviceScaleFactor: 2, colorScheme: 'dark' });
+const ctx = await browser.newContext({ viewport: { width: 1920, height: 1560 }, deviceScaleFactor: 2, colorScheme: 'dark' });
 const page = await ctx.newPage();
 const login = await ctx.request.post(`${base}/login`, { data: { user: 'admin', password: 'admin' } });
 if (!login.ok()) {
