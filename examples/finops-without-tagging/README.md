@@ -37,7 +37,7 @@ The demo uses a tiny Python mock of the DoiT API ([`mock-api/server.py`](mock-ap
 # from the repository root
 npm install && npm run build
 mage build:linuxARM64            # or mage build:linux on amd64 hosts
-docker compose -f examples/attribute-dashboards/docker-compose.yaml up --build
+docker compose -f examples/finops-without-tagging/docker-compose.yaml up --build
 ```
 
 Open <http://localhost:3000> (admin / admin). The data source and both dashboards are provisioned under the **Cloud Intelligence** folder. Set `GRAFANA_PORT` to use another port and `GRAFANA_VERSION` to pick a Grafana image tag (default 13.1.0; the screenshots use 13.2.2).
@@ -59,6 +59,7 @@ The data source points at `http://mock-doit-api:8080` with a dummy token; swap i
 | Team budget utilization | Cost ÷ budget | Team | This month | Bar gauge |
 | Shared resources split by consumer | Cost, share | Resource, top consumer | This month | Table |
 | Unallocated spend by service | Cost | Service, workload | This month | Table |
+| Cost by workload on shared resources | Cost, share of resource | Workload name, namespace, resource | This month | Table |
 
 Reports without a time interval come back as tables; reports with a time interval come back as one time series per group. The plugin handles both automatically.
 
@@ -70,6 +71,7 @@ Reports without a time interval come back as tables; reports with a time interva
 - **Shared resources split by consumer.** Table; `Share` column uses the *Gauge* cell type with text value, cost column formatted as currency, sorted by cost.
 - **Team budgets.** Bar gauge on *Team budget utilization*, unit percent (0.0–1.0), thresholds at 85% (amber) and 95% (red), display name `${__data.fields.team}`, *All values* enabled.
 - **What's still unallocated.** Table on *Unallocated spend by service*. Keep it on the board so it stays empty.
+- **Cost by workload on shared resources.** Full-width table on *Cost by workload on shared resources*: workload, namespace, the shared resource it consumed, cost, and its share of that resource as a gauge cell. Workload names come from the sensor, so this is the panel to place next to the same service's request rate, latency and logs.
 
 ### Variables and alerts
 
@@ -116,7 +118,7 @@ Tip: every report in Cloud Intelligence has an **Open in Grafana** action that g
 ## Regenerate the screenshots
 
 ```bash
-GRAFANA_URL=http://localhost:3000 OUT=examples/attribute-dashboards/img node examples/attribute-dashboards/screenshots.mjs
+GRAFANA_URL=http://localhost:3000 OUT=examples/finops-without-tagging/img node examples/finops-without-tagging/screenshots.mjs
 ```
 
 The script logs in as admin, adds the sensor-install annotation, and captures both dashboards, the panel editor and the data source page at 2× scale. It uses the `@playwright/test` dependency already in this repository.

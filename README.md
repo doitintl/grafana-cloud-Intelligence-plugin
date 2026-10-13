@@ -74,7 +74,7 @@ The data source supports Grafana Alerting. Create an alert rule, choose this dat
 
 ## Examples
 
-- [FinOps dashboards without tagging](https://github.com/doitintl/grafana-cloud-intelligence-plugin/tree/main/examples/attribute-dashboards): two importable dashboards built on Attribute™ runtime attribution (showback by team and unallocated spend; cost per customer and margin), with a self-contained demo stack and a step-by-step guide to the reports and panels behind them.
+- [FinOps dashboards without tagging](https://github.com/doitintl/grafana-cloud-intelligence-plugin/tree/main/examples/finops-without-tagging): two importable dashboards built on Attribute™ runtime attribution (showback by team and unallocated spend; cost per customer and margin), with a self-contained demo stack and a step-by-step guide to the reports and panels behind them.
 
 ## Getting help
 
